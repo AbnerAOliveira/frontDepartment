@@ -29,4 +29,27 @@ export class DepartmentService {
     return this.http.post<Department>(this.url, d)
       .pipe(tap((dep: Department) => this.departmentSubject.getValue().push(dep)));
   }
+
+  deleteDepartment(dep: Department): Observable<any> {
+    return this.http.delete(`${this.url}/${dep._id}`)
+      .pipe(tap(() => {
+        let departments = this.departmentSubject.getValue();
+        let i = departments.findIndex(d => d._id === dep._id);
+        if (i >= 0) {
+          departments.splice(i, 1);
+        }
+      }));
+  }
+
+  updateDepartments(dep: Department): Observable<Department> {
+    return this.http.patch<Department>(`${this.url}/${dep._id}`, dep)
+      .pipe(tap((d) => {
+        let departments = this.departmentSubject.getValue();
+        let i = departments.findIndex(d => d._id === dep._id);
+        if (i >= 0) {
+          departments[i].name = d.name;
+        }
+      }));
+  }
+
 }

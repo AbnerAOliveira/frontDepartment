@@ -1,6 +1,7 @@
 import {Component, OnInit} from '@angular/core';
 import {Department} from "./department";
 import {DepartmentService} from "./department.service";
+import {MatSnackBar} from "@angular/material/snack-bar";
 
 @Component({
   selector: 'app-department',
@@ -16,7 +17,10 @@ export class DepartmentComponent implements OnInit {
     {name: 'Dep 3', _id: 'asfdadsf'},
   ];
 
-  constructor(private departmentService: DepartmentService) {
+  depEdit: Department = null;
+
+  constructor(private departmentService: DepartmentService,
+              private snackBar: MatSnackBar) {
   }
 
   ngOnInit() {
@@ -26,16 +30,30 @@ export class DepartmentComponent implements OnInit {
   }
 
   save() {
-    this.departmentService.addDepartment({name: this.depName}).subscribe(
-      (dep) => {
-        console.log(dep);
-      },
-      (error) => console.log(error)
-    )
+    if (this.depEdit) {
+      this.departmentService.updateDepartments({name: this.depName, _id: this.depEdit._id})
+        .subscribe((dep) => {
+            this.notify('Updated');
+            this.clearFields();
+          },
+          (error) => {
+            this.notify('Error');
+          });
+    } else {
+      this.departmentService.addDepartment({name: this.depName}).subscribe(
+        (dep) => {
+          console.log(dep);
+          this.notify('Inserted');
+          this.clearFields();
+        },
+        (error) => console.log(error)
+      );
+    }
   }
 
   clearFields() {
     this.depName = '';
+    this.depEdit = null;
   }
 
   cancel() {
@@ -43,11 +61,18 @@ export class DepartmentComponent implements OnInit {
   }
 
   edit(dep: Department) {
-
+    this.depName = dep.name;
+    this.depEdit = dep;
   }
 
   delete(dep: Department) {
+    this.departmentService.deleteDepartment(dep)
+      .subscribe(() => this.notify('Deleted'),
+        (error) => console.log(error));
+  }
 
+  notify(msg: string) {
+    this.snackBar.open(msg, "OK", {duration: 3000});
   }
 
 }
